@@ -1,24 +1,23 @@
 package com.model2.mvc.web.product;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.model2.mvc.common.Page;
@@ -59,48 +58,39 @@ public class ProductController {
 
 	}
 
-	@RequestMapping(value="/addProduct", method=RequestMethod.POST, consumes= { MediaType.MULTIPART_FORM_DATA_VALUE })
-	public String addProduct(HttpSession session, @ModelAttribute("product") Product product, RedirectAttributes redirectAttributes, @RequestParam("multiFile") List<MultipartFile> files) throws Exception {
+	@RequestMapping(value="/addProduct", method=RequestMethod.POST)
+	public String addProduct(HttpSession session, @ModelAttribute("product") Product product, RedirectAttributes redirectAttributes, MultipartFile file) throws Exception {
 
 		System.out.println("/addProduct : POST");
-		
-		System.out.println(product);
 
 		User user = (User) session.getAttribute("user");
-		
-		List<String> fileList = new ArrayList<String>();
 
 		product.setSellerId(user.getUserId());
-		
-		System.out.println(files);
 
 		
 		// file
-		if (!files.isEmpty()) {
-						
-			String uploadPath = "C:\\Users\\bitcamp\\git\\09.Model2MVCShop\\09.Model2MVCShop(jQuery)\\src\\main\\webapp\\images\\uploadFiles";
+		if (file != null) {
+			
+			System.out.println(file);
+			
+			String fileName = file.getOriginalFilename();
+			
+			// String id = UUID.randomUUID().toString() + "_";
+			
+			String uploadPath = "C:\\Users\\bitcamp\\git\\07Model2MVCShop\\07.Model2MVCShop(URI,pattern)\\src\\main\\webapp\\images\\uploadFiles";
+			File target = new File(uploadPath, fileName);
 			
 			if(!new File(uploadPath).exists()) {
 				new File(uploadPath).mkdir();
 			}
-				
-			for(MultipartFile file : files) {
-				
-				String fileName = file.getOriginalFilename();
-				
-				System.out.println(fileName);
-				
-				File target = new File(uploadPath, fileName);
-				file.transferTo(target);
-				
-				fileList.add(fileName);					
-			}
+									
+			file.transferTo(target);
 			
-			String fileNames = String.join(",", fileList);
-			
-			product.setFileName(fileNames);	
+			product.setFileName(fileName);						
 		}
 		
+		
+			
 		productService.addProduct(product);
 		
 		redirectAttributes.addFlashAttribute("product", product);
@@ -132,8 +122,8 @@ public class ProductController {
 	}
 
 	@RequestMapping(value="/listProduct")
-	public String listProduct(@ModelAttribute("search") Search search,  Model model) throws Exception {
-//@RequestParam("menu") String menu,
+	public String listProduct(@ModelAttribute("search") Search search, @RequestParam("menu") String menu, Model model) throws Exception {
+
 		System.out.println("/listProduct");
 
 		if(search.getCurrentPage() ==0 ){
@@ -151,7 +141,7 @@ public class ProductController {
 		model.addAttribute("list", map.get("list"));
 		model.addAttribute("resultPage", resultPage);
 		model.addAttribute("search", search);
-		//model.addAttribute("menu", menu);
+		model.addAttribute("menu", menu);
 
 		return "forward:/product/listProduct.jsp";
 	}
@@ -169,43 +159,37 @@ public class ProductController {
 		return "forward:/product/updateProduct.jsp";
 	}
 
-	@RequestMapping(value="/updateProduct", method=RequestMethod.POST, consumes= { MediaType.MULTIPART_FORM_DATA_VALUE })
-	public String updateProduct( @ModelAttribute("product") Product product, @RequestParam("menu") String menu, @RequestParam("multiFile") List<MultipartFile> files) throws Exception {
+	@RequestMapping(value="/updateProduct", method=RequestMethod.POST)
+	public String updateProduct( @ModelAttribute("product") Product product, @RequestParam("menu") String menu, Model model, RedirectAttributes redirectAttributes, MultipartFile file) throws Exception {
 		
 		System.out.println("/updateProduct : POST");
 		
-		List<String> fileList = new ArrayList<String>();
+
+		product = productService.getProduct(product.getProdNo());
 		
 		// file
-		if (!files.isEmpty()) {
+		if (file != null) {
 			
-			String uploadPath = "C:\\Users\\bitcamp\\git\\09.Model2MVCShop\\09.Model2MVCShop(jQuery)\\src\\main\\webapp\\images\\uploadFiles";
+			System.out.println(file);
+			
+			String fileName = file.getOriginalFilename();
+			
+			// String id = UUID.randomUUID().toString() + "_";
+			
+			String uploadPath = "C:\\Users\\bitcamp\\git\\07Model2MVCShop\\07.Model2MVCShop(URI,pattern)\\src\\main\\webapp\\images\\uploadFiles";
+			File target = new File(uploadPath, fileName);
 			
 			if(!new File(uploadPath).exists()) {
 				new File(uploadPath).mkdir();
 			}
-				
-			for(MultipartFile file : files) {
-				
-				String fileName = file.getOriginalFilename();
-				
-				System.out.println(fileName);
-				
-				File target = new File(uploadPath, fileName);
-				file.transferTo(target);
-				
-				fileList.add(fileName);					
-			}
+									
+			file.transferTo(target);
 			
-			String fileNames = String.join(",", fileList);
-			
-			product.setFileName(fileNames);	
+			product.setFileName(fileName);						
 		}
 		
 		productService.updateProduct(product);
-
-		product = productService.getProduct(product.getProdNo());
-
+		
 		return  "redirect:/product/getProduct?prodNo="+product.getProdNo()+"&menu="+menu;
 
 	}

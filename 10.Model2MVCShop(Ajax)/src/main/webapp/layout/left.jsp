@@ -1,4 +1,3 @@
-   
 <%@ page contentType="text/html; charset=EUC-KR" %>
 <%@ page pageEncoding="EUC-KR"%>
 
@@ -10,7 +9,7 @@
 <head>
 	<meta charset="EUC-KR">
 	
-	<title>Model2 MVC Shop</title>
+	<title>Model2</title>
 
 	<link href="/css/left.css" rel="stylesheet" type="text/css">
 	
@@ -123,6 +122,7 @@
 					</tr>
 
 					<c:if test="${ !empty user && user.role == 'user'}">
+					<%-- <c:if test="${ user.role == 'user'}"> --%>
 						<tr>
 							<td class="Depth03"><a href="/product/addProduct?menu=manage"
 								target="rightFrame">판매상품등록</a></td>
